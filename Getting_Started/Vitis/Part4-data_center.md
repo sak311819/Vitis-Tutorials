@@ -159,6 +159,20 @@ emconfigutil --platform xilinx_u200_gen3x16_xdma_2_202110_1 --nd 1
 v++ -c -t hw_emu --platform xilinx_u200_gen3x16_xdma_2_202110_1 --config ../../src/u200.cfg -k vadd -I../../src ../../src/vadd.cpp -o vadd.xo 
 v++ -l -t hw_emu --platform xilinx_u200_gen3x16_xdma_2_202110_1 --config ../../src/u200.cfg ./vadd.xo -o vadd.xclbin
 ```
+Refer to *Targeting Software Emulation* if you get errors on the g++ command.
+If you are targeting another platform other than u200, e.g. u50, you need to correctly specify the SP tags in config file accroding to your platform. e.g., for u50, make a copy of the config file **\Getting_Started\Vitis\example\src\u200.cfg and rename it to u50.cfg. Then modify the lines below(chaning DDR to HBM):
+```
+[connectivity]
+nk=vadd:1:vadd_1
+sp=vadd_1.in1:HBM[1]
+sp=vadd_1.in2:HBM[2]
+sp=vadd_1.out:HBM[1]
+```
+Now, run the build and link commands with this u50.cfg file:
+```bash
+v++ -c -t hw_emu --platform xilinx_u50_gen3x16_xdma_5_202210_1 --config ../../src/u50.cfg -k vadd -I../../src ../../src/vadd.cpp -o vadd.xo 
+v++ -l -t hw_emu --platform xilinx_u50_gen3x16_xdma_5_202210_1 --config ../../src/u50.cfg ./vadd.xo -o vadd.xclbin
+```
 Refer to *Targeting Software Emulation* for a brief explanation of these different commands. The only difference with the previous step is the `v++` target (`-t`) option which is changed from `sw_emu` to `hw_emu`. All other options remain the same.
 
 Building for hardware emulation takes more time than for software emulation, but still much less than when targeting the hardware accelerator card. After the build process completes, you can run hardware emulation using the following commands:
