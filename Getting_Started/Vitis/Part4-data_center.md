@@ -56,14 +56,36 @@ cd sw_emu
 ```
 
 Then, after changing into the target build directory, enter the following commands to build the host application and device binary:
-
 ```bash
 g++ -Wall -g -std=c++11 ../../src/host.cpp -o app.exe -I${XILINX_XRT}/include/ -L${XILINX_XRT}/lib/ -lOpenCL -lpthread -lrt -lstdc++
+```
+If error related to boost library occurs, install the boost library using following command run the above command again:
+see anser record: **https://support.xilinx.com/s/article/000035742?language=en_US**
+```bash
+sudo apt install libboost-dev
+g++ -Wall -g -std=c++11 ../../src/host.cpp -o app.exe -I${XILINX_XRT}/include/ -L${XILINX_XRT}/lib/ -lOpenCL -lpthread -lrt -lstdc++
+```
+If still encounter errors, the most probable cause is c++ version, modify the g++ command to use c++17 version:
+```bash
+g++ -Wall -g -std=c++17 ../../src/host.cpp -o app.exe -I${XILINX_XRT}/include/ -L${XILINX_XRT}/lib/ -lOpenCL -lpthread -lrt -lstdc++
+```
+If errors occur indicating undefined reference to xrt api calls, modify the g++ command to use lxrt_coreutil:
+```bash
+g++ -Wall -g -std=c++17 ../../src/host.cpp -o app.exe -I${XILINX_XRT}/include/ -L${XILINX_XRT}/lib/ -lOpenCL -lpthread -lrt -lstdc++ -lxrt_coreutil
+```
+After successful build, run following commands to compile and link kernels:
+```bash
 emconfigutil --platform xilinx_u200_gen3x16_xdma_2_202110_1 --nd 1
 v++ -c -t sw_emu --platform xilinx_u200_gen3x16_xdma_2_202110_1 --config ../../src/u200.cfg -k vadd -I../../src ../../src/vadd.cpp -o vadd.xo 
 v++ -l -t sw_emu --platform xilinx_u200_gen3x16_xdma_2_202110_1 --config ../../src/u200.cfg ./vadd.xo -o vadd.xclbin
 ```
-
+If using platform other than u200, use the relevant platform e.g. for u50, vitis 2022.1, the above commands will be executed like below(make sure to change platform in the makefile as well at **Getting_Started\Vitis\example\u200\Makefile):
+```bash
+g++ -Wall -g -std=c++17 ../../src/host.cpp -o app.exe -I${XILINX_XRT}/include/ -L${XILINX_XRT}/lib/ -lOpenCL -lpthread -lrt -lstdc++ -lxrt_coreutil
+emconfigutil --platform xilinx_u50_gen3x16_xdma_5_202210_1 --nd 1
+v++ -c -t sw_emu --platform xilinx_u50_gen3x16_xdma_5_202210_1 --config ../../src/u200.cfg -k vadd -I../../src ../../src/vadd.cpp -o vadd.xo 
+v++ -l -t sw_emu --platform xilinx_u50_gen3x16_xdma_5_202210_1 --config ../../src/u200.cfg ./vadd.xo -o vadd.xclbin
+```
 Here is a brief explanation of each of these four commands:
 
 1. `g++` compiles the host application using the standard GNU C compiler. Refer to [Building the Host Program](https://docs.xilinx.com/r/en-US/ug1393-vitis-application-acceleration/Building-the-Host-Program) for more information.
@@ -131,14 +153,12 @@ cd hw_emu
 ```
 
 Then, after changing into the target build directory, enter the following commands to build the host application and device binary:
-
 ```bash
 g++ -Wall -g -std=c++11 ../../src/host.cpp -o app.exe -I${XILINX_XRT}/include/ -L${XILINX_XRT}/lib/ -lOpenCL -lpthread -lrt -lstdc++
 emconfigutil --platform xilinx_u200_gen3x16_xdma_2_202110_1 --nd 1
 v++ -c -t hw_emu --platform xilinx_u200_gen3x16_xdma_2_202110_1 --config ../../src/u200.cfg -k vadd -I../../src ../../src/vadd.cpp -o vadd.xo 
 v++ -l -t hw_emu --platform xilinx_u200_gen3x16_xdma_2_202110_1 --config ../../src/u200.cfg ./vadd.xo -o vadd.xclbin
 ```
-
 Refer to *Targeting Software Emulation* for a brief explanation of these different commands. The only difference with the previous step is the `v++` target (`-t`) option which is changed from `sw_emu` to `hw_emu`. All other options remain the same.
 
 Building for hardware emulation takes more time than for software emulation, but still much less than when targeting the hardware accelerator card. After the build process completes, you can run hardware emulation using the following commands:
